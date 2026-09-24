@@ -1,0 +1,6 @@
+{
+  "name": "LinkSphere - Bio Link & Profile Builder",
+  "description": "Customizable bio link and personal brand page builder inspired by Linktree with live mobile preview, themes, analytics, and social integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
