@@ -21,8 +21,6 @@ import {
   AlertCircle,
   Loader2,
   UserX,
-  Cloud,
-  LogIn,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -631,11 +629,12 @@ export default function App() {
         isSyncingCloud={isSyncingCloud}
         onSignInGoogle={handleSignInGoogle}
         onSignOut={handleSignOut}
+        showMobileTabs={mobileLayoutMode === 'editor'}
       />
 
       {/* Toast Banner */}
       {toast && (
-        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-5 sm:max-w-sm z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-2xl border text-xs font-semibold bg-slate-900 text-white border-slate-700">
+        <div className="fixed bottom-20 lg:bottom-5 left-4 right-4 sm:left-auto sm:right-5 sm:max-w-sm z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-2xl border text-xs font-semibold bg-slate-900 text-white border-slate-700">
           {toast.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           ) : (
@@ -645,60 +644,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Optional Guest Sync Prompt Banner */}
-      {!authLoading && !user && (
-        <div className="w-full bg-indigo-600/10 dark:bg-indigo-950/50 border-b border-indigo-200/70 dark:border-indigo-900/60 px-3 sm:px-6 py-2.5">
-          <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200 min-w-0">
-              <Cloud className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-              <span>
-                আপনার বায়ো পেজটি <strong>Firebase Cloud</strong>-এ সেভ করতে ও রিয়েল ভিজিটর অ্যানালিটিক্স পেতে Google দিয়ে লগইন করুন। (ভিজিটরদের কোনো লগইন লাগবে না)
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleSignInGoogle}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition shrink-0"
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Sign in with Google</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Layout Switcher Bar (Editor vs Live Preview) */}
-      <div className="lg:hidden flex items-center justify-center p-2.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-1 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700">
-          <button
-            type="button"
-            onClick={() => setMobileLayoutMode('editor')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-              mobileLayoutMode === 'editor'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300'
-            }`}
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>Customize Editor</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileLayoutMode('preview')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-              mobileLayoutMode === 'preview'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300'
-            }`}
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span>Live Phone Preview</span>
-          </button>
-        </div>
-      </div>
-
       {/* Main Dual-Pane Workspace */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 py-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start min-w-0">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 pt-5 pb-24 sm:p-6 lg:pb-8 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start min-w-0">
         {/* Left Side: Editor Panels */}
         <section
           className={`lg:col-span-7 space-y-6 min-w-0 w-full ${
@@ -752,6 +699,36 @@ export default function App() {
           />
         </section>
       </main>
+
+      {/* Clean Floating Mobile Switcher (Editor vs Preview) */}
+      <div className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
+        <div className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1 rounded-full shadow-2xl border border-slate-200 dark:border-slate-700">
+          <button
+            type="button"
+            onClick={() => setMobileLayoutMode('editor')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition ${
+              mobileLayoutMode === 'editor'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>Editor</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileLayoutMode('preview')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition ${
+              mobileLayoutMode === 'preview'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span>Preview</span>
+          </button>
+        </div>
+      </div>
 
       {/* Modals */}
       <PublishModal
