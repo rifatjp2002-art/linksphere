@@ -98,7 +98,7 @@ export const AppearanceTab: React.FC<AppearanceTabProps> = ({ profile, onUpdateT
           Link Button Corner Shape
         </h3>
 
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {[
             { id: 'none', label: 'Square', radius: 'rounded-none' },
             { id: 'sm', label: 'Slight', radius: 'rounded-sm' },
@@ -130,28 +130,46 @@ export const AppearanceTab: React.FC<AppearanceTabProps> = ({ profile, onUpdateT
           Surface Style & Glassmorphism
         </h3>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {[
             {
               id: 'glass',
               label: 'Glassmorphism',
               desc: 'Frosted transparent blur',
-              cardBg: 'bg-white/10 backdrop-blur-md hover:bg-white/20',
-              cardBorder: 'border border-white/20 shadow-lg',
+              cardBg:
+                currentTheme.id === 'minimal-snow' || currentTheme.id === 'pastel-sakura'
+                  ? 'bg-white/75 backdrop-blur-md hover:bg-white'
+                  : 'bg-white/10 backdrop-blur-md hover:bg-white/20',
+              cardBorder:
+                currentTheme.id === 'minimal-snow' || currentTheme.id === 'pastel-sakura'
+                  ? 'border border-slate-200 shadow-sm'
+                  : 'border border-white/20 shadow-lg',
+              cardTextColor:
+                currentTheme.id === 'minimal-snow' || currentTheme.id === 'pastel-sakura'
+                  ? 'text-slate-900 font-medium'
+                  : 'text-white font-medium',
+              cardSubtextColor:
+                currentTheme.id === 'minimal-snow' || currentTheme.id === 'pastel-sakura'
+                  ? 'text-slate-500'
+                  : 'text-slate-200/80',
             },
             {
               id: 'flat',
               label: 'Solid Flat',
               desc: 'High contrast solid card',
-              cardBg: 'bg-slate-800/90 hover:bg-slate-800',
+              cardBg: 'bg-slate-800/95 hover:bg-slate-800',
               cardBorder: 'border border-slate-700 shadow-md',
+              cardTextColor: 'text-white font-medium',
+              cardSubtextColor: 'text-slate-300',
             },
             {
               id: 'neon',
               label: 'Neon Border',
               desc: 'Luminous cyan/indigo glow',
-              cardBg: 'bg-zinc-950/80 hover:bg-zinc-900',
+              cardBg: 'bg-zinc-950/90 hover:bg-zinc-900',
               cardBorder: 'border border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]',
+              cardTextColor: 'text-cyan-300 font-medium',
+              cardSubtextColor: 'text-zinc-400',
             },
           ].map((style) => (
             <button
@@ -162,6 +180,8 @@ export const AppearanceTab: React.FC<AppearanceTabProps> = ({ profile, onUpdateT
                   cardStyle: style.id as CardStyle,
                   cardBg: style.cardBg,
                   cardBorder: style.cardBorder,
+                  cardTextColor: style.cardTextColor,
+                  cardSubtextColor: style.cardSubtextColor,
                 })
               }
               className={`p-3 rounded-xl border text-left transition ${
@@ -188,7 +208,7 @@ export const AppearanceTab: React.FC<AppearanceTabProps> = ({ profile, onUpdateT
           Font Family & Typography Pairings
         </h3>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {[
             { id: 'sans', label: 'Modern Sans', preview: 'Aa - Plus Jakarta / Inter', font: 'font-sans' },
             { id: 'serif', label: 'Editorial Serif', preview: 'Aa - Lora / Garamond', font: 'font-serif' },

@@ -1,0 +1,225 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Private creator account metadata storing owner UID, verified Google email, and active bio handle. Strictly isolated to owner.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the account owner",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified Google account email address (PII)",
+          "maxLength": 256
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Account display name",
+          "maxLength": 100
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Account avatar URL",
+          "maxLength": 1000
+        },
+        "username": {
+          "type": "string",
+          "description": "Active public bio handle",
+          "minLength": 2,
+          "maxLength": 40,
+          "pattern": "^[a-z0-9_-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when account was created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when account was last updated"
+        }
+      },
+      "required": ["uid", "email", "displayName", "photoURL", "username", "createdAt", "updatedAt"]
+    },
+    "PublicBioProfile": {
+      "title": "PublicBioProfile",
+      "description": "Publicly viewable bio link page keyed by unique lowercase username handle.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the creator who owns this bio page",
+          "maxLength": 128
+        },
+        "username": {
+          "type": "string",
+          "description": "Unique lowercase URL handle matching document ID",
+          "minLength": 2,
+          "maxLength": 40,
+          "pattern": "^[a-z0-9_-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Creator public display name",
+          "maxLength": 100
+        },
+        "bio": {
+          "type": "string",
+          "description": "Creator public biography",
+          "maxLength": 300
+        },
+        "location": {
+          "type": "string",
+          "description": "Optional public location",
+          "maxLength": 100
+        },
+        "pronouns": {
+          "type": "string",
+          "description": "Optional pronouns",
+          "maxLength": 40
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "Public avatar image URL",
+          "maxLength": 1000
+        },
+        "bannerUrl": {
+          "type": "string",
+          "description": "Optional header banner URL",
+          "maxLength": 1000
+        },
+        "isVerified": {
+          "type": "boolean",
+          "description": "Whether creator badge is enabled"
+        },
+        "badgeText": {
+          "type": "string",
+          "description": "Badge label",
+          "maxLength": 50
+        },
+        "socials": {
+          "type": "array",
+          "description": "Bounded list of social links (max 20)"
+        },
+        "links": {
+          "type": "array",
+          "description": "Bounded list of bio link cards (max 50)"
+        },
+        "theme": {
+          "type": "object",
+          "description": "Theme customization settings"
+        },
+        "widgets": {
+          "type": "object",
+          "description": "Widget settings such as coffee button, Spotify URL, and public contact form config"
+        },
+        "published": {
+          "type": "boolean",
+          "description": "Whether the bio page is publicly accessible without login"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last publish/update"
+        }
+      },
+      "required": [
+        "ownerId",
+        "username",
+        "displayName",
+        "bio",
+        "location",
+        "pronouns",
+        "avatarUrl",
+        "bannerUrl",
+        "isVerified",
+        "badgeText",
+        "socials",
+        "links",
+        "theme",
+        "widgets",
+        "published",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AnalyticsEvent": {
+      "title": "AnalyticsEvent",
+      "description": "Immutable public visitor view or link click event recorded for cross-device creator analytics.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the bio profile owner (verified against parent profile)",
+          "maxLength": 128
+        },
+        "username": {
+          "type": "string",
+          "description": "Username handle matching parent profile document",
+          "maxLength": 40
+        },
+        "type": {
+          "type": "string",
+          "enum": ["view", "click"],
+          "description": "Event category"
+        },
+        "linkId": {
+          "type": "string",
+          "description": "ID of clicked link (empty string for view events)",
+          "maxLength": 100
+        },
+        "linkTitle": {
+          "type": "string",
+          "description": "Snapshot title of clicked link",
+          "maxLength": 120
+        },
+        "device": {
+          "type": "string",
+          "enum": ["mobile", "desktop", "tablet"],
+          "description": "Detected visitor device category"
+        },
+        "referrer": {
+          "type": "string",
+          "description": "Normalized traffic referrer domain or Direct",
+          "maxLength": 80
+        },
+        "dayKey": {
+          "type": "string",
+          "description": "UTC/local YYYY-MM-DD date key for daily aggregation",
+          "minLength": 10,
+          "maxLength": 10
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when event occurred"
+        }
+      },
+      "required": ["ownerId", "username", "type", "linkId", "linkTitle", "device", "referrer", "dayKey", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserAccount" },
+      "description": "Private authenticated creator account records (PII isolated to owner)."
+    },
+    "/profiles/{username}": {
+      "schema": { "$ref": "#/entities/PublicBioProfile" },
+      "description": "Published creator bio pages readable by any public visitor without login."
+    },
+    "/profiles/{username}/events/{eventId}": {
+      "schema": { "$ref": "#/entities/AnalyticsEvent" },
+      "description": "Append-only visitor view and click events readable and deletable only by the profile owner."
+    }
+  }
+}

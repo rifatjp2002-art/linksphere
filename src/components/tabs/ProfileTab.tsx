@@ -102,12 +102,13 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ profile, onUpdateProfile
             />
           </div>
 
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 min-w-0 w-full space-y-2">
             <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
               Avatar Image URL
             </label>
             <input
               type="text"
+              maxLength={1000}
               value={profile.avatarUrl}
               onChange={(e) => onUpdateProfile({ avatarUrl: e.target.value })}
               className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 font-mono"
@@ -115,9 +116,9 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ profile, onUpdateProfile
             />
 
             {/* Avatar presets */}
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex items-center gap-2 pt-1 flex-wrap">
               <span className="text-[11px] text-slate-500">Presets:</span>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 {AVATAR_PRESETS.map((preset, idx) => (
                   <button
                     key={idx}
@@ -138,25 +139,26 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ profile, onUpdateProfile
           <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
             Header Banner URL (Optional)
           </label>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <input
               type="text"
+              maxLength={1000}
               value={profile.bannerUrl || ''}
               onChange={(e) => onUpdateProfile({ bannerUrl: e.target.value })}
-              className="flex-1 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 font-mono"
+              className="flex-1 min-w-0 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 font-mono"
               placeholder="https://images.unsplash.com/..."
             />
             {profile.bannerUrl && (
               <button
                 type="button"
                 onClick={() => onUpdateProfile({ bannerUrl: '' })}
-                className="px-2.5 py-1.5 text-xs text-rose-500 bg-rose-50 dark:bg-rose-950/40 rounded-lg hover:bg-rose-100 transition"
+                className="px-2.5 py-1.5 text-xs text-rose-500 bg-rose-50 dark:bg-rose-950/40 rounded-lg hover:bg-rose-100 transition shrink-0"
               >
                 Remove
               </button>
             )}
           </div>
-          <div className="flex items-center gap-2 pt-2">
+          <div className="flex items-center gap-2 pt-2 flex-wrap">
             <span className="text-[11px] text-slate-500">Banner Presets:</span>
             {BANNER_PRESETS.map((b, i) => (
               <button
@@ -181,12 +183,13 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ profile, onUpdateProfile
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Username / Handle
+              Username / Handle (min 2 chars)
             </label>
             <div className="flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5">
               <span className="text-xs text-slate-400 font-mono font-bold">@</span>
               <input
                 type="text"
+                maxLength={40}
                 value={profile.username}
                 onChange={(e) => onUpdateProfile({ username: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '') })}
                 className="w-full px-1.5 py-1.5 bg-transparent text-xs text-slate-900 dark:text-white outline-none font-mono"
@@ -201,6 +204,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ profile, onUpdateProfile
             </label>
             <input
               type="text"
+              maxLength={100}
               value={profile.displayName}
               onChange={(e) => onUpdateProfile({ displayName: e.target.value })}
               className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500"
@@ -215,13 +219,13 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ profile, onUpdateProfile
               Bio / Tagline
             </label>
             <span className="text-[11px] text-slate-400">
-              {profile.bio.length}/160 characters
+              {profile.bio.length}/300 characters
             </span>
           </div>
           <textarea
             value={profile.bio}
             onChange={(e) => onUpdateProfile({ bio: e.target.value })}
-            maxLength={180}
+            maxLength={300}
             rows={3}
             className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 leading-relaxed resize-none"
             placeholder="Write a brief intro about yourself, your work, or brand..."
@@ -235,6 +239,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ profile, onUpdateProfile
             </label>
             <input
               type="text"
+              maxLength={100}
               value={profile.location || ''}
               onChange={(e) => onUpdateProfile({ location: e.target.value })}
               className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500"
@@ -248,6 +253,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ profile, onUpdateProfile
             </label>
             <input
               type="text"
+              maxLength={40}
               value={profile.pronouns || ''}
               onChange={(e) => onUpdateProfile({ pronouns: e.target.value })}
               className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500"
@@ -332,9 +338,10 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({ profile, onUpdateProfile
                 <SocialIcon platform={social.platform} className="w-4 h-4" />
               </div>
 
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <input
                   type="text"
+                  maxLength={500}
                   value={social.url}
                   onChange={(e) => handleUpdateSocial(social.id, { url: e.target.value })}
                   placeholder={`https://${social.platform}.com/...`}

@@ -140,17 +140,22 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({ profile, onUpdateWidgets
         </div>
 
         {widgets.showContactForm && (
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Your Inquiries Receiver Email
-            </label>
-            <input
-              type="email"
-              value={widgets.contactEmail}
-              onChange={(e) => handleUpdate({ contactEmail: e.target.value })}
-              className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 font-mono"
-              placeholder="contact@yourdomain.com"
-            />
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Your Inquiries Receiver Email (যে ইমেইলে মেসেজ আসবে)
+              </label>
+              <input
+                type="email"
+                value={widgets.contactEmail}
+                onChange={(e) => handleUpdate({ contactEmail: e.target.value })}
+                className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 font-mono"
+                placeholder="rifatjp2002@gmail.com"
+              />
+            </div>
+            <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-900/60 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+              <strong>কিভাবে কাজ করে:</strong> কেউ ফর্ম সাবমিট করলে সরাসরি আপনার দেওয়া ইমেইলে (যেমন: <span className="font-mono">rifatjp2002@gmail.com</span>) মেসেজ চলে যাবে (FormSubmit এর মাধ্যমে)। প্রথমবার কোনো মেসেজ এলে আপনার ইনবক্সে একটি <strong>Activate Form</strong> কনফার্মেশন ইমেইল যাবে—ওটা ১ বার ক্লিক করে অ্যাক্টিভেট করলেই সব মেসেজ সরাসরি ইনবক্সে আসবে।
+            </div>
           </div>
         )}
       </div>
