@@ -345,7 +345,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({ profile, onUpdateLinks }) =>
             >
               {/* Row Top Bar */}
               <div className="flex items-center justify-between gap-2.5 flex-wrap sm:flex-nowrap min-w-0">
-                <div className="flex items-center gap-2 min-w-0 flex-1 w-full sm:w-auto">
+                <div className="flex items-center gap-2 min-w-0 w-full sm:w-auto sm:flex-1">
                   <div className="flex flex-col text-slate-400 shrink-0">
                     <button
                       type="button"
@@ -391,7 +391,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({ profile, onUpdateLinks }) =>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0 ml-auto">
                   {/* Click Counter Badge */}
                   <span className="hidden sm:flex items-center gap-1 text-[11px] font-mono font-medium text-slate-500 dark:text-slate-400 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md">
                     <Activity className="w-3 h-3 text-indigo-500" />

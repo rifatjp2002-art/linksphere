@@ -18,6 +18,7 @@ import { signInWithPopup, signOut, User } from 'firebase/auth';
 import { auth, db, googleProvider, handleFirestoreError, OperationType } from '../firebase';
 import { AnalyticsData, UserProfile } from '../types';
 import { SAMPLE_PROFILES } from '../data/presets';
+import { PRESET_THEMES } from '../data/themes';
 
 // Validation synchronicity constants matching firebase-blueprint.json
 export const HANDLE_REGEX = /^[a-z0-9_-]+$/;
@@ -184,9 +185,66 @@ async function findAvailableHandle(preferred: string, uid: string): Promise<stri
   return sanitizeHandle(withSuffix);
 }
 
+export function createCleanCreatorProfile(user?: User | null, handle = 'creator'): UserProfile {
+  return {
+    id: user?.uid || 'creator',
+    username: handle,
+    displayName: clampStr(user?.displayName || 'Creator', 100),
+    bio: 'Welcome to my official LinkSphere page. Explore my links and get in touch!',
+    location: '',
+    pronouns: '',
+    avatarUrl: clampStr(
+      user?.photoURL ||
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+      1000
+    ),
+    bannerUrl: '',
+    isVerified: false,
+    badgeText: 'Creator',
+    socials: [],
+    links: [
+      {
+        id: 'starter_1',
+        title: 'My Website / Portfolio',
+        subtitle: 'Check out my latest work and projects',
+        url: 'https://example.com',
+        active: true,
+        icon: '🌐',
+        highlight: true,
+        animation: 'none',
+        clicks: 0,
+        badge: 'Featured',
+      },
+      {
+        id: 'starter_2',
+        title: 'Connect with Me',
+        subtitle: 'Follow my updates and social channels',
+        url: 'https://github.com',
+        active: true,
+        icon: '🔗',
+        highlight: false,
+        animation: 'none',
+        clicks: 0,
+      },
+    ],
+    theme: PRESET_THEMES[0],
+    widgets: {
+      showContactForm: true,
+      contactEmail: clampStr(user?.email || '', 256),
+      showCoffeeButton: false,
+      coffeeUsername: handle,
+      coffeeLabel: 'Buy Me a Coffee',
+      customFooterText: 'Powered by LinkSphere',
+      showShareButton: true,
+      showQRCodeButton: true,
+      showVCardDownload: true,
+    },
+    analytics: makeEmptyAnalytics(),
+  };
+}
+
 export async function loadOrCreateCreatorAccount(
-  user: User,
-  draftProfile: UserProfile
+  user: User
 ): Promise<{ profile: UserProfile; cloudUsername: string; isNewUser: boolean }> {
   const userPath = `users/${user.uid}`;
   let userSnap;
@@ -216,14 +274,7 @@ export async function loadOrCreateCreatorAccount(
     }
 
     // Account record exists without profile doc (recover cleanly)
-    const recoveredProfile: UserProfile = {
-      ...draftProfile,
-      id: user.uid,
-      username: existingHandle,
-      displayName: user.displayName || draftProfile.displayName,
-      avatarUrl: user.photoURL || draftProfile.avatarUrl,
-      analytics: makeEmptyAnalytics(),
-    };
+    const recoveredProfile = createCleanCreatorProfile(user, existingHandle);
     const payload = {
       ...buildSanitizedProfilePayload(user.uid, existingHandle, recoveredProfile, true),
       createdAt: serverTimestamp(),
@@ -241,23 +292,10 @@ export async function loadOrCreateCreatorAccount(
     };
   }
 
-  // First-time Google Login: build initial profile from Google account + default starter links
+  // First-time Google Login: build a fresh personal profile strictly from the user's Google account
   const emailPrefix = (user.email || '').split('@')[0] || user.displayName || 'creator';
   const uniqueHandle = await findAvailableHandle(emailPrefix, user.uid);
-
-  const starterProfile: UserProfile = {
-    ...draftProfile,
-    id: user.uid,
-    username: uniqueHandle,
-    displayName: clampStr(user.displayName || draftProfile.displayName || 'New Creator', 100),
-    avatarUrl: clampStr(user.photoURL || draftProfile.avatarUrl, 1000),
-    links: draftProfile.links.map((l) => ({ ...l, clicks: 0 })),
-    widgets: {
-      ...draftProfile.widgets,
-      contactEmail: user.email || draftProfile.widgets.contactEmail || '',
-    },
-    analytics: makeEmptyAnalytics(),
-  };
+  const starterProfile = createCleanCreatorProfile(user, uniqueHandle);
 
   try {
     await setDoc(doc(db, 'users', user.uid), {

@@ -8,6 +8,7 @@ import {
   Coffee,
   ArrowLeft,
   Edit3,
+  LogIn,
 } from 'lucide-react';
 import { UserProfile, BioLink } from '../types';
 import { SocialIcon } from './SocialIcons';
@@ -18,6 +19,8 @@ import confetti from 'canvas-confetti';
 interface PublicBioPageProps {
   profile: UserProfile;
   isStandalonePublishedView?: boolean;
+  isSignedIn?: boolean;
+  isOwnProfile?: boolean;
   onBackToEditor: () => void;
   onOpenQR: () => void;
   onOpenShare: () => void;
@@ -27,6 +30,8 @@ interface PublicBioPageProps {
 export const PublicBioPage: React.FC<PublicBioPageProps> = ({
   profile,
   isStandalonePublishedView = false,
+  isSignedIn = false,
+  isOwnProfile = false,
   onBackToEditor,
   onOpenQR,
   onOpenShare,
@@ -97,10 +102,17 @@ export const PublicBioPage: React.FC<PublicBioPageProps> = ({
           className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 bg-black/55 hover:bg-black/75 backdrop-blur-md text-white rounded-full text-xs font-semibold shadow-lg border border-white/15 transition truncate"
         >
           {isStandalonePublishedView ? (
-            <>
-              <Edit3 className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">Create Your LinkSphere</span>
-            </>
+            isSignedIn ? (
+              <>
+                <Edit3 className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{isOwnProfile ? 'Edit My Page' : 'My Studio'}</span>
+              </>
+            ) : (
+              <>
+                <LogIn className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Sign in / Create Yours</span>
+              </>
+            )
           ) : (
             <>
               <ArrowLeft className="w-4 h-4 shrink-0" />

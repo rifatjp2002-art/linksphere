@@ -11,6 +11,7 @@ import { WidgetsTab } from './components/tabs/WidgetsTab';
 import { AnalyticsTab } from './components/tabs/AnalyticsTab';
 import { LivePreviewPhone } from './components/LivePreviewPhone';
 import { PublicBioPage } from './components/PublicBioPage';
+import { AuthLandingGate } from './components/AuthLandingGate';
 import { QRCodeModal } from './components/QRCodeModal';
 import { ShareModal } from './components/ShareModal';
 import { PublishModal } from './components/PublishModal';
@@ -21,6 +22,8 @@ import {
   AlertCircle,
   Loader2,
   UserX,
+  RefreshCw,
+  LogOut,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -32,6 +35,7 @@ import {
 } from './utils/publish';
 import {
   clearOwnerAnalytics,
+  createCleanCreatorProfile,
   fetchPublicProfile,
   loadOrCreateCreatorAccount,
   recordPublicAnalyticsEvent,
@@ -43,20 +47,6 @@ import {
 
 const STORAGE_KEY = 'linksphere_profile_v1';
 const PUBLISHED_AT_KEY = 'linksphere_published_at_v1';
-
-function getInitialDraftProfile(): UserProfile {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse saved profile', e);
-      }
-    }
-  }
-  return SAMPLE_PROFILES[0];
-}
 
 function getQueryUsername(): string | null {
   if (typeof window === 'undefined') return null;
@@ -73,7 +63,7 @@ export default function App() {
 
   const initialQueryUser = getQueryUsername();
 
-  const [profile, setProfile] = useState<UserProfile>(getInitialDraftProfile);
+  const [profile, setProfile] = useState<UserProfile>(() => createCleanCreatorProfile(null));
   const [standaloneProfile, setStandaloneProfile] = useState<UserProfile | null>(
     initialHashProfile
   );
@@ -85,6 +75,8 @@ export default function App() {
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [cloudSyncError, setCloudSyncError] = useState<boolean>(false);
   const [cloudUsername, setCloudUsername] = useState<string | null>(null);
   const [isSyncingCloud, setIsSyncingCloud] = useState<boolean>(false);
   const [cloudLinkClicks, setCloudLinkClicks] = useState<Record<string, number>>({});
@@ -110,8 +102,6 @@ export default function App() {
   );
 
   const recordedPublicViewRef = useRef<string | null>(null);
-  const draftProfileRef = useRef<UserProfile>(profile);
-  draftProfileRef.current = profile;
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -175,12 +165,17 @@ export default function App() {
     };
   }, [initialQueryUser, initialHashProfile]);
 
-  // 2. Listen to Firebase Authentication state for Creator Editor
+  // 2. Listen to Firebase Authentication state for Creator Editor (strictly owner-scoped)
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+      setAuthError(null);
+      setCloudSyncError(false);
+
       if (!firebaseUser) {
         setCloudUsername(null);
+        setCloudLinkClicks({});
+        setProfile(createCleanCreatorProfile(null));
         setAuthLoading(false);
         return;
       }
@@ -188,7 +183,7 @@ export default function App() {
       try {
         setIsSyncingCloud(true);
         const { profile: cloudProfile, cloudUsername: handle, isNewUser } =
-          await loadOrCreateCreatorAccount(firebaseUser, draftProfileRef.current);
+          await loadOrCreateCreatorAccount(firebaseUser);
         setProfile(cloudProfile);
         setCloudUsername(handle);
         setHasUnpublishedChanges(false);
@@ -200,6 +195,7 @@ export default function App() {
         }
       } catch (err) {
         console.error('Failed to sync creator account', err);
+        setCloudSyncError(true);
         showToast('Cloud account load করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
       } finally {
         setIsSyncingCloud(false);
@@ -225,13 +221,6 @@ export default function App() {
     return () => unsub();
   }, [user, cloudUsername]);
 
-  // Keep local draft synced for offline convenience
-  useEffect(() => {
-    if (!user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-    }
-  }, [profile, user]);
-
   // Listen for hash changes if user pastes or navigates to a published hash URL
   useEffect(() => {
     const handleHashChange = () => {
@@ -250,19 +239,42 @@ export default function App() {
   }, []);
 
   const handleSignInGoogle = async () => {
+    setAuthError(null);
     try {
       await signInWithGoogle();
       showToast('Google দিয়ে সফলভাবে সাইন ইন হয়েছে!', 'success');
     } catch (err: any) {
       if (err?.code === 'auth/popup-closed-by-user') return;
-      showToast('Google Login সফল হয়নি। অনুগ্রহ করে আবার চেষ্টা করুন।', 'error');
+      if (err?.code === 'auth/unauthorized-domain') {
+        const host = typeof window !== 'undefined' ? window.location.hostname : 'this domain';
+        const msg = `এই ডোমেইনটি (${host}) Firebase Authorized Domains-এ যুক্ত নেই। Firebase Console → Authentication → Settings → Authorized domains-এ "${host}" যোগ করুন।`;
+        setAuthError(msg);
+        showToast(msg, 'error');
+        return;
+      }
+      if (err?.code === 'auth/popup-blocked') {
+        const msg = 'ব্রাউজার থেকে Google Login পপআপ ব্লক হয়েছে। অনুগ্রহ করে Popups Allow করে আবার চেষ্টা করুন।';
+        setAuthError(msg);
+        showToast(msg, 'error');
+        return;
+      }
+      const fallbackMsg = 'Google Login সফল হয়নি। অনুগ্রহ করে আবার চেষ্টা করুন।';
+      setAuthError(fallbackMsg);
+      showToast(fallbackMsg, 'error');
     }
   };
 
   const handleSignOut = async () => {
     await signOutCreator();
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(PUBLISHED_AT_KEY);
     setCloudUsername(null);
     setCloudLinkClicks({});
+    setCloudSyncError(false);
+    setPublishedAt(null);
+    setHasUnpublishedChanges(false);
+    setProfile(createCleanCreatorProfile(null));
+    setIsPublicView(false);
     showToast('সফলভাবে Sign Out হয়েছেন।', 'success');
   };
 
@@ -539,6 +551,13 @@ export default function App() {
     setIsPublicView(false);
   };
 
+  const handleViewPublicDemo = () => {
+    setStandaloneProfile(SAMPLE_PROFILES[0]);
+    setStandaloneOwnerId(null);
+    setPublicNotFound(false);
+    setIsPublicView(true);
+  };
+
   // Loading Screen for Public Visitor resolving ?u=username
   if (publicLoading) {
     return (
@@ -566,7 +585,7 @@ export default function App() {
             onClick={handleExitPublicView}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition"
           >
-            Create Your Own LinkSphere
+            {user ? 'Back to My Studio' : 'Sign in / Create Your LinkSphere'}
           </button>
         </div>
       </div>
@@ -575,11 +594,16 @@ export default function App() {
 
   // Standalone Fullscreen Public View Mode (No login needed for visitors!)
   if (isPublicView) {
+    const isOwnViewedProfile = Boolean(
+      user && (!standaloneProfile || standaloneOwnerId === user.uid)
+    );
     return (
       <>
         <PublicBioPage
           profile={activePublicProfile}
           isStandalonePublishedView={Boolean(standaloneProfile)}
+          isSignedIn={Boolean(user)}
+          isOwnProfile={isOwnViewedProfile}
           onBackToEditor={handleExitPublicView}
           onOpenQR={() => setQrModalOpen(true)}
           onOpenShare={() => setShareModalOpen(true)}
@@ -603,6 +627,62 @@ export default function App() {
           }}
         />
       </>
+    );
+  }
+
+  // Strictly block private Creator Editor until Firebase Auth finishes & user is signed in
+  if (authLoading || (user && isSyncingCloud && !cloudUsername)) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-slate-950 text-white gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+        <p className="text-sm font-medium text-slate-300">
+          {user ? 'আপনার প্রাইভেট স্টুডিও লোড হচ্ছে...' : 'Checking session...'}
+        </p>
+      </div>
+    );
+  }
+
+  // Unauthenticated Gate: Show ONLY Login Page — NEVER expose the Editor or user info!
+  if (!user) {
+    return (
+      <AuthLandingGate
+        onSignInGoogle={handleSignInGoogle}
+        onViewPublicDemo={handleViewPublicDemo}
+        authError={authError}
+      />
+    );
+  }
+
+  // Cloud account recovery screen if signed in but profile failed to sync
+  if (cloudSyncError && !cloudUsername) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center p-4 bg-slate-950 text-white">
+        <div className="w-full max-w-md p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-4 shadow-2xl">
+          <AlertCircle className="w-10 h-10 text-rose-400 mx-auto" />
+          <h2 className="text-lg font-bold">Account Sync Issue</h2>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            আপনার প্রোফাইল ডেটা ক্লাউড থেকে লোড করা যায়নি। ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করুন।
+          </p>
+          <div className="flex items-center justify-center gap-2.5 pt-1">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Retry
+            </button>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
